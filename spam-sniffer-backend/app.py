@@ -60,4 +60,8 @@ def check_spam():
     })
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     app.run(host="0.0.0.0", port=5000, debug=True)
+=======
+    app.run(host="0.0.0.0", port=5000, debug=True)
+>>>>>>> 5dd13c4 (Made Docker Containers for front-end and Back-end)
