@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { gapi } from 'gapi-script';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { gapi } from "gapi-script";
+import { motion } from "framer-motion";
 
 const CLIENT_ID = process.env.REACT_APP_CLIENT_ID;
 const API_KEY = process.env.REACT_APP_API_KEY;
@@ -19,14 +19,14 @@ function GmailClient() {
           clientId: CLIENT_ID,
           scope: SCOPES,
           discoveryDocs: [
-            'https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest',
+            "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest",
           ],
         })
-        .then(() => console.log('GAPI initialized'))
-        .catch((error) => console.error('GAPI init error', error));
+        .then(() => console.log("GAPI initialized"))
+        .catch((error) => console.error("GAPI init error", error));
     }
 
-    gapi.load('client:auth2', start);
+    gapi.load("client:auth2", start);
   }, []);
 
   const handleLogin = async () => {
@@ -34,10 +34,10 @@ function GmailClient() {
       const authInstance = gapi.auth2.getAuthInstance();
       await authInstance.signIn();
 
-      if (!gapi.client.gmail) await gapi.client.load('gmail', 'v1');
+      if (!gapi.client.gmail) await gapi.client.load("gmail", "v1");
       loadEmails();
     } catch (error) {
-      console.error('Login error', error);
+      console.error("Login error", error);
     }
   };
 
@@ -51,21 +51,38 @@ function GmailClient() {
 
   const loadEmails = async () => {
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const startOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      0,
+      0,
+      0
+    );
+    const endOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      23,
+      59,
+      59
+    );
     const after = Math.floor(startOfDay.getTime() / 1000);
     const before = Math.floor(endOfDay.getTime() / 1000);
     const query = `is:unread after:${after} before:${before}`;
 
     try {
-      const response = await gapi.client.gmail.users.messages.list({ userId: 'me', q: query });
+      const response = await gapi.client.gmail.users.messages.list({
+        userId: "me",
+        q: query,
+      });
       if (response.result.messages) {
         const emailDetails = await Promise.all(
           response.result.messages.map(async (message) => {
             const email = await gapi.client.gmail.users.messages.get({
-              userId: 'me',
+              userId: "me",
               id: message.id,
-              format: 'full',
+              format: "full",
             });
             return email.result;
           })
@@ -75,54 +92,80 @@ function GmailClient() {
         setEmails([]);
       }
     } catch (error) {
-      console.error('Error loading emails', error);
+      console.error("Error loading emails", error);
     }
   };
 
   const checkSpam = async (emailId, emailBody) => {
     try {
-      const res = await axios.post('http://localhost:5000/check_spam', { text: emailBody });
+      const res = await axios.post("http://localhost:5000/check_spam", {
+        text: emailBody,
+      });
       setSpamResults((prev) => ({ ...prev, [emailId]: res.data }));
     } catch (error) {
-      console.error('Spam check failed', error);
+      console.error("Spam check failed", error);
     }
   };
 
   const markAsRead = async (emailId) => {
     try {
       await gapi.client.gmail.users.messages.modify({
-        userId: 'me',
+        userId: "me",
         id: emailId,
-        removeLabelIds: ['UNREAD'],
+        removeLabelIds: ["UNREAD"],
       });
       setEmails((prev) => prev.filter((email) => email.id !== emailId));
     } catch (error) {
-      console.error('Error marking as read', error);
+      console.error("Error marking as read", error);
     }
   };
 
   const deleteEmail = async (emailId) => {
     try {
       await gapi.client.gmail.users.messages.trash({
-        userId: 'me',
+        userId: "me",
         id: emailId,
       });
-      setEmails((prevEmails) => prevEmails.filter((email) => email.id !== emailId));
+      setEmails((prevEmails) =>
+        prevEmails.filter((email) => email.id !== emailId)
+      );
+      console.log("Email moved to trash:", emailId);
     } catch (error) {
-      console.error('Delete error', error);
-      alert('Failed to delete email: ' + (error?.result?.error?.message || 'Unknown error'));
+      console.error("Error trashing email:", error);
+      alert(
+        "Failed to delete email: " +
+          (error?.result?.error?.message || "Unknown error")
+      );
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-4xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-6">📩 Gmail Spam Detector</h2>
+        <h2 className="text-3xl font-bold mb-6 text-blue-800 text-center">
+          📬 Email Spam Detector
+        </h2>
 
-        <div className="flex justify-center gap-4 mb-6">
-          <button onClick={handleLogin} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md transition-all">Login with Gmail</button>
-          <button onClick={handleLogout} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow-md transition-all">Logout</button>
-          <button onClick={loadEmails} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-md transition-all">Refresh Emails</button>
+        {/* 🔘 Control Buttons */}
+        <div className="flex gap-4 justify-center mb-8">
+          <button
+            onClick={handleLogin}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md transition-all"
+          >
+            Login with Gmail
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow-md transition-all"
+          >
+            Logout
+          </button>
+          <button
+            onClick={loadEmails}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-md transition-all"
+          >
+            Refresh Emails
+          </button>
         </div>
 
         {emails.length > 0 ? (
@@ -132,8 +175,12 @@ function GmailClient() {
             </h4>
             {emails.map((email) => {
               const spamResult = spamResults[email.id];
-              const from = email.payload.headers.find(h => h.name === 'From')?.value;
-              const subject = email.payload.headers.find(h => h.name === 'Subject')?.value;
+              const from = email.payload.headers.find(
+                (h) => h.name === "From"
+              )?.value;
+              const subject = email.payload.headers.find(
+                (h) => h.name === "Subject"
+              )?.value;
 
               return (
                 <motion.div
@@ -144,27 +191,50 @@ function GmailClient() {
                   className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg hover:scale-[1.01] transition-transform"
                 >
                   <h5 className="text-md font-semibold text-gray-800">{from}</h5>
-                  <p className="text-sm text-gray-600 mb-2"><strong>Subject:</strong> {subject}</p>
-                  <pre className="text-sm text-gray-700 bg-gray-100 p-2 rounded overflow-auto">{email.snippet}</pre>
+                  <p className="text-sm text-gray-600 mb-2">
+                    <strong>Subject:</strong> {subject}
+                  </p>
+                  <pre className="text-sm text-gray-700 bg-gray-100 p-2 rounded overflow-auto">
+                    {email.snippet}
+                  </pre>
 
-                  <div className="flex gap-3 mt-3 flex-wrap">
-                    <button onClick={() => checkSpam(email.id, email.snippet)} className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded transition">Check for Spam</button>
-                    <button onClick={() => markAsRead(email.id)} className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition">Mark as Read</button>
-                    <button onClick={() => deleteEmail(email.id)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition">Delete Email</button>
+                  <div className="flex gap-3 mt-3">
+                    <button
+                      onClick={() => checkSpam(email.id, email.snippet)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded transition"
+                    >
+                      Check for Spam
+                    </button>
+                    <button
+                      onClick={() => markAsRead(email.id)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition"
+                    >
+                      Mark as Read
+                    </button>
+                    <button
+                      onClick={() => deleteEmail(email.id)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition"
+                    >
+                      Delete Email
+                    </button>
                   </div>
 
                   {spamResult && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                      className="mt-4 bg-gray-50 border-l-4 border-yellow-400 p-3 rounded-md"
-                    >
-                      <p><strong>Spam?</strong> {spamResult.is_spam ? '✅ Yes' : '❌ No'}</p>
-                      <p><strong>Spam Score:</strong> {spamResult.spam_score}</p>
-                      <p><strong>Type:</strong> {spamResult.description}</p>
-                      <p><strong>Summary:</strong> {spamResult.summary}</p>
-                    </motion.div>
+                    <div className="mt-4 bg-gray-50 border-l-4 border-yellow-400 p-3 rounded-md animate-fade-in">
+                      <p>
+                        <strong>Spam?</strong>{" "}
+                        {spamResult.is_spam ? "✅ Yes" : "❌ No"}
+                      </p>
+                      <p>
+                        <strong>Spam Score:</strong> {spamResult.spam_score}
+                      </p>
+                      <p>
+                        <strong>Type:</strong> {spamResult.description}
+                      </p>
+                      <p>
+                        <strong>Summary:</strong> {spamResult.summary}
+                      </p>
+                    </div>
                   )}
                 </motion.div>
               );

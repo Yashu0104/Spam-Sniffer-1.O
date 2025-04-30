@@ -1,0 +1,26 @@
+New change
+
+# Conflicts:
+#	spam-sniffer-frontend/src/GmailClient.js
+#
+# It looks like you may be committing a cherry-pick.
+# If this is not correct, please run
+#	git update-ref -d CHERRY_PICK_HEAD
+# and try again.
+
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Author:    23f2003713 <23f2003713@ds.study.iitm.ac.in>
+# Date:      Sun Apr 27 02:05:55 2025 +0530
+#
+# On branch main
+# Your branch is ahead of 'origin/main' by 3 commits.
+#   (use "git push" to publish your local commits)
+#
+# You are currently cherry-picking commit 34e7323.
+#
+# Changes to be committed:
+#	modified:   spam-sniffer-frontend/src/GmailClient.js
+#
